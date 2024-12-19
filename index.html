@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Diet App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input, select {
+            padding: 10px;
+            margin: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .diet-plan {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Create Your Diet Plan</h1>
+    <form id="diet-form">
+        <input type="text" name="name" placeholder="Name" required><br>
+        <input type="number" name="age" placeholder="Age" required><br>
+        <input type="number" name="weight" placeholder="Weight (kg)" required><br>
+        <input type="text" name="height" placeholder="Height (cm)" required><br>
+        <input type="text" name="goal" placeholder="Goal (weight_loss, weight_gain, maintenance)" required><br>
+        <input type="number" name="weekly_goal" placeholder="Weekly Goal (kg)" required><br>
+        <input type="number" name="meals" placeholder="Number of Meals" required><br>
+        <input type="number" name="snacks" placeholder="Number of Snacks" required><br>
+        <select name="diet_type" required>
+            <option value="">Select Diet Type</option>
+            <option value="vegan">Vegan</option>
+            <option value="vegetarian">Vegetarian</option>
+            <option value="keto">Keto</option>
+            <option value="paleo">Paleo</option>
+        </select><br>
+        <button type="submit">Generate Plan</button>
+    </form>
+
+    <div id="diet-plan" class="diet-plan" style="display: none;"></div>
+
+    <script>
+        document.getElementById('diet-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            fetch('/api/generate_plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(plan => {
+                const dietPlanDiv = document.getElementById('diet-plan');
+                dietPlanDiv.style.display = 'block';
+                dietPlanDiv.innerHTML = `
+                    <h2>Diet Plan for ${plan.Name}</h2>
+                    <p>Age: ${plan.Age}</p>
+                    <p>Weight: ${plan.Weight} kg</p>
+                    <p>Height: ${plan.Height} cm</p>
+                    <p>Goal: ${plan.Goal}</p>
+                    <p>Diet Type: ${plan['Diet Type']}</p>
+                    <h3>Meal Plan</h3>
+                    <ul>
+                        ${plan['Meal Plan'].Meals.map(meal => `<li>${meal}</li>`).join('')}
+                    </ul>
+                    <h3>Snacks</h3>
+                    <ul>
+                        ${plan['Meal Plan'].Snacks.map(snack => `<li>${snack}</li>`).join('')}
+                    </ul>
+                    <h3>Total Calories: ${plan['Meal Plan']['Total Calories']} kcal</h3>
+                    <h3>Generic Plan</h3>
+                    <ul>
+                        ${plan['Generic Plan'].Meals.map(meal => `<li>${meal.Breakfast || meal.Lunch || meal.Dinner || meal.Snacks} - ${meal.Calories} kcal</li>`).join('')}
+                    </ul>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
